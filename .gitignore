@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+
+# Per-machine agent configuration and installer backups.
+config/local/
+*.backup.*
+projects/
+sessions/
+plans/
