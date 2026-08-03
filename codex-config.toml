@@ -1,0 +1,50 @@
+approvals_reviewer = "auto_review"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "low"
+[projects."/mnt/d/workspace/mlops-fraud-detection"]
+trust_level = "trusted"
+
+[projects."/mnt/d/workspace"]
+trust_level = "trusted"
+
+[projects."/mnt/d/workspace/hoannc0506.github.io"]
+trust_level = "trusted"
+
+[projects."/mnt/d/workspace/claude"]
+trust_level = "trusted"
+
+[tui]
+status_line = ["model-with-reasoning", "git-branch", "context-remaining", "five-hour-limit", "project-name", "pull-request-number", "thread-title"]
+status_line_use_colors = true
+
+[tui.model_availability_nux]
+"gpt-5.6-sol" = 2
+
+[features]
+memories = true
+
+# --- Secret/credential redaction (shared script with Claude Code) ---
+# Block prompts that contain a high-confidence secret.
+[[hooks.UserPromptSubmit]]
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = "python3 /mnt/d/workspace/claude/hooks/redact-secrets.py"
+timeout = 10
+
+# Redact MCP tool output; warn on secrets in shell/file output (can't be rewritten).
+[[hooks.PostToolUse]]
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = "python3 /mnt/d/workspace/claude/hooks/redact-secrets.py"
+timeout = 15
+
+[hooks.state]
+
+[hooks.state."/home/hoannc0506/.codex/config.toml:post_tool_use:0:0"]
+trusted_hash = "sha256:d100360aa73bdbce90bf969d7c4700eec05fa2a60e4435c9e0b3e52e42c7c215"
+
+[hooks.state."/home/hoannc0506/.codex/config.toml:user_prompt_submit:0:0"]
+trusted_hash = "sha256:279a0be2d2d5ebe97be3bf323f03109dae273a5cd6fe19754582d0dce9fde4fb"
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"

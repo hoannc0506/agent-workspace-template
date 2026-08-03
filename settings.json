@@ -1,0 +1,53 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "claude-opus-4-8",
+  "worktree": {
+    "baseRef": "fresh"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/hoannc0506/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true
+  },
+  "effortLevel": "low",
+  "tui": "fullscreen",
+  "theme": "auto",
+  "verbose": true,
+  "preferredNotifChannel": "auto",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/hoannc0506/.claude/hooks/redact-secrets.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read|Bash|Grep|Glob|Edit|Write|WebFetch|WebSearch|NotebookEdit|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/hoannc0506/.claude/hooks/redact-secrets.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
