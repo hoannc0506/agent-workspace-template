@@ -9,6 +9,9 @@ __pycache__/
 .claude/settings.local.json
 .codex/*.local.*
 
+# Local git worktrees.
+.worktrees/
+
 # Local reports: generated output such as memory-map, may include user memories.
 .agents/reports/local/*
 !.agents/reports/local/.gitkeep

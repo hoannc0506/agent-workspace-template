@@ -1,7 +1,5 @@
 # Agent instructions
 
-These instructions apply to every agent working in this repository (Claude Code reads them through `CLAUDE.md`).
-
 ## General guidelines
 
 - Never use the em dash "-". Use plain dash "-" instead.
@@ -32,6 +30,7 @@ CLAUDE.md                 imports AGENTS.md for Claude Code
   tools/                  CLI tools (memory-lint, memory-map)
 .claude/                  Claude Code only settings
 .codex/                   Codex only settings
+.worktrees/<name>/        local git worktrees, gitignored
 ```
 
 - Put anything both agents use in `.agents/`.
@@ -139,6 +138,20 @@ When a report holds a conclusion future sessions need, save a memory that points
 - Never commit `.agents/memories/user/` contents (only its `.gitkeep` is tracked).
 - Commit memory changes separately from code changes, with a `memory:` prefix.
 - Do not commit or push unless the user asks.
+
+## Worktrees
+
+- Create local worktrees only in `.worktrees/` at the repository root (gitignored), never in a sibling folder, a temp folder or a user-scope location.
+- Name each worktree with a short kebab-case slug of 1 to 3 words that says what the work is, for example `memory-map`, `fix-redaction` or `ci-cache`.
+- Use the same slug for the folder and the branch:
+
+  ```sh
+  git worktree add .worktrees/<slug> -b <slug>
+  ```
+
+- Do not put dates, ticket numbers, agent names or random suffixes in the slug.
+- `user` memories are not copied into a new worktree because they are gitignored; shared memories written in a worktree reach `main` when its branch is merged.
+- When the branch is merged or abandoned, remove the worktree with `git worktree remove .worktrees/<slug>` and delete the branch.
 
 ## Template sync
 
