@@ -8,3 +8,7 @@ __pycache__/
 # Personal agent settings.
 .claude/settings.local.json
 .codex/*.local.*
+
+# Local reports: generated output such as memory-map, may include user memories.
+.agents/reports/local/*
+!.agents/reports/local/.gitkeep

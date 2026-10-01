@@ -25,3 +25,9 @@ git fetch upstream && git merge upstream/main
 ```sh
 .agents/tools/memory-lint
 ```
+
+## View memories as a mind map
+
+```sh
+.agents/tools/memory-map --open
+```
