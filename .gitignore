@@ -1,9 +1,10 @@
 __pycache__/
 *.py[cod]
 
-# Per-machine agent configuration and installer backups.
-config/local/
-*.backup.*
-projects/
-sessions/
-plans/
+# User memories are local: kept in the project tree, never pushed.
+.agents/memories/user/*
+!.agents/memories/user/.gitkeep
+
+# Personal agent settings.
+.claude/settings.local.json
+.codex/*.local.*
