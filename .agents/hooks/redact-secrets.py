@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-User-level hook: redact secrets/credentials before they reach the model.
-Works for BOTH Claude Code and Codex (auto-detected from the input shape).
+Workspace hook: redact secrets/credentials before they reach the model.
+Works for BOTH Claude Code and Codex (Codex is detected by `turn_id` in the input).
+Its patterns are also reused by .agents/tools/memory-lint.
 
 Handles two hook events (dispatched on hook_event_name):
 
   * PostToolUse      -> Claude: silently rewrites tool output (Read/Bash/Grep/etc.)
                         via `updatedToolOutput`, masking secrets to first5***last5.
-                        Codex: rewrites MCP tool output via `updatedMCPToolOutput`
-                        (schema limit: non-MCP shell/file output can't be rewritten,
-                        so a SECURITY WARNING is injected via additionalContext).
+                        Codex: tool output can't be rewritten yet, so a SECURITY
+                        WARNING is injected via additionalContext.
   * UserPromptSubmit -> cannot rewrite prompt text on either agent, so it BLOCKS the
                         prompt when a high-confidence secret is present.
 
@@ -119,19 +119,14 @@ def redact_tree(obj, patterns):
 
 
 def _is_codex(data):
-    """Codex hook input uses `turn_id` / `tool_response` / `prompt`;
-    Claude Code uses `tool_result` / `user_prompt`."""
-    return (
-        "turn_id" in data
-        or "tool_response" in data
-        or ("prompt" in data and "user_prompt" not in data)
-    )
+    """Both agents send `tool_response` and `prompt`; only Codex sends `turn_id`
+    on turn-scoped events (PostToolUse, UserPromptSubmit)."""
+    return "turn_id" in data
 
 
 def handle_post_tool_use(data):
     codex = _is_codex(data)
-    # Claude: tool_result   Codex: tool_response
-    result = data.get("tool_response") if codex else data.get("tool_result")
+    result = data.get("tool_response")
     if result is None:
         sys.exit(0)
     patterns = HIGH + GENERIC
@@ -143,18 +138,15 @@ def handle_post_tool_use(data):
           f"{data.get('tool_name')}: redacted {sorted(set(kinds))}")
 
     if codex:
-        # Codex can silently rewrite ONLY MCP tool output (updatedMCPToolOutput);
-        # for built-in shell/file tools that field is ignored, so we also attach a
-        # warning. Providing both is safe: Codex applies whichever fits the tool.
+        # Codex cannot rewrite tool output yet (updatedMCPToolOutput is parsed but
+        # marks the hook run as failed), so only a warning is injected.
         print(json.dumps({
             "hookSpecificOutput": {
                 "hookEventName": "PostToolUse",
-                "updatedMCPToolOutput": new_result,
                 "additionalContext": (
                     f"SECURITY WARNING: the preceding tool output contains "
                     f"{len(kinds)} secret/credential value(s) ({kinds_str}). "
-                    "If this was an MCP tool the value(s) were redacted; otherwise "
-                    "treat them as sensitive: do not echo, store, or transmit them."
+                    "Treat them as sensitive: do not echo, store, or transmit them."
                 ),
             }
         }))
