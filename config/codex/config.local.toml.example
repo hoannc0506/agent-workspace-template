@@ -1,5 +1,0 @@
-# Copy this file to ~/.codex/config.local.toml and customize it for this machine.
-# It is appended to the generated config.toml by scripts/install-agent-settings.
-
-# [projects."/absolute/path/to/your/workspace"]
-# trust_level = "trusted"
