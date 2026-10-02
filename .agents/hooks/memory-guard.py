@@ -18,7 +18,7 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-WATCHED = (ROOT / ".agents" / "memories", ROOT / ".agents" / "reports")
+WATCHED = (ROOT / ".agents" / "memories", ROOT / "reports")
 PATCH_PATH = re.compile(r"^\*\*\* (?:Add File|Update File|Move to): (.+)$", re.MULTILINE)
 
 

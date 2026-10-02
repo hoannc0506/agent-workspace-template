@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate agent memories (.agents/memories) and reports (.agents/reports).
+"""Validate agent memories (.agents/memories) and reports (reports/).
 
 Usage:
   memory-lint            check every memory and report
@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 MEMORIES = ROOT / ".agents" / "memories"
-REPORTS = ROOT / ".agents" / "reports"
+REPORTS = ROOT / "reports"
 LOCAL_REPORTS = REPORTS / "local"  # gitignored, generated output; not linted
 
 TYPES = ("user", "feedback", "project", "reference")
@@ -213,7 +213,7 @@ def check_memory(mem, names, all_names, out):
                 out.error(rel, 1, "duplicate tags")
             for t in tags:
                 if t.startswith("report:") and not (REPORTS / t[len("report:"):]).is_file():
-                    out.warn(rel, 1, f"tag '{t}' points to a missing report under .agents/reports/")
+                    out.warn(rel, 1, f"tag '{t}' points to a missing report under reports/")
 
     if not mem.body.strip():
         out.error(rel, mem.body_line, "body is empty")
@@ -234,7 +234,7 @@ def check_memory(mem, names, all_names, out):
 def check_report(path, out):
     rel = path.relative_to(ROOT).as_posix()
     if path.parent.parent != REPORTS:
-        out.error(rel, 1, "reports must live directly in .agents/reports/<category>/")
+        out.error(rel, 1, "reports must live directly in reports/<category>/")
         return
     if path.suffix not in REPORT_EXTS:
         out.error(rel, 1, f"report extension must be one of {', '.join(REPORT_EXTS)}")
@@ -255,7 +255,7 @@ def check_local_not_tracked(out):
     try:
         tracked = subprocess.run(
             ["git", "-C", str(ROOT), "ls-files", "--",
-             *(f".agents/memories/{t}" for t in LOCAL_TYPES), ".agents/reports/local"],
+             *(f".agents/memories/{t}" for t in LOCAL_TYPES), "reports/local"],
             capture_output=True, text=True, check=True,
         ).stdout.split()
     except (OSError, subprocess.CalledProcessError):

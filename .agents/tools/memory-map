@@ -4,9 +4,9 @@
 Usage:
   memory-map [--out PATH] [--shared] [--open]
 
-  --out PATH   output file (default: .agents/reports/local/memory-map.html, gitignored)
+  --out PATH   output file (default: reports/local/memory-map.html, gitignored)
   --shared     leave out local user memories; required for output inside
-               .agents/reports outside local/, which is committed
+               reports outside local/, which is committed
   --open       open the file in the default browser
 
 The map is a radial tree (root -> memory type -> memory). Dashed lines are
@@ -23,7 +23,7 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-REPORTS = ROOT / ".agents" / "reports"
+REPORTS = ROOT / "reports"
 LOCAL_REPORTS = REPORTS / "local"
 DEFAULT_OUT = LOCAL_REPORTS / "memory-map.html"
 
@@ -85,7 +85,7 @@ def main(argv):
 
     out = args.out.resolve()
     if REPORTS in out.parents and LOCAL_REPORTS not in out.parents and not args.shared:
-        parser.error("output inside .agents/reports is committed; add --shared to leave out local user memories")
+        parser.error("output inside reports is committed; add --shared to leave out local user memories")
 
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render(collect(load_lint(), args.shared), args.shared), encoding="utf-8")

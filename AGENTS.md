@@ -23,11 +23,11 @@ AGENTS.md                 instructions for all agents (this file)
 CLAUDE.md                 imports AGENTS.md for Claude Code
 .agents/                  shared by every agent
   memories/<type>/        project memory, one fact per .md file
-  reports/<category>/     reports (.html, .md, .svg, .png)
-  reports/local/          local generated output (memory-map), gitignored
   skills/<skill>/SKILL.md shared skills (Codex reads them here; .claude/skills links here)
   hooks/                  hook scripts used by both agents
   tools/                  CLI tools (memory-lint, memory-map)
+reports/<category>/       reports (.html, .md, .svg, .png)
+reports/local/            local generated output (memory-map), gitignored
 .claude/                  Claude Code only settings
 .codex/                   Codex only settings
 .worktrees/<name>/        local git worktrees, gitignored
@@ -118,12 +118,12 @@ Do not save:
 
 ### Visualizing
 
-- `.agents/tools/memory-map` writes a mind-map HTML of all memories to `.agents/reports/local/memory-map.html` (gitignored, because it includes local `user` memories).
-- Add `--open` to open it in a browser, or `--shared --out .agents/reports/<category>/<file>.html` to produce a committable map without `user` memories.
+- `.agents/tools/memory-map` writes a mind-map HTML of all memories to `reports/local/memory-map.html` (gitignored, because it includes local `user` memories).
+- Add `--open` to open it in a browser, or `--shared --out reports/<category>/<file>.html` to produce a committable map without `user` memories.
 
 ## Reports
 
-- Write reports to `.agents/reports/<category>/YYYY-MM-DD-<slug>.<ext>`, never to the repo root or a temp folder.
+- Write reports to `reports/<category>/YYYY-MM-DD-<slug>.<ext>`, never loose in the repo root, in `.agents/` or in a temp folder.
 - Categories: `plans`, `research`, `reviews`, `incidents`, `architecture`.
 - `local` holds generated, local-only output; it is gitignored and not linted, so never put a report meant for the team there.
 To add a category, create its folder with a `.gitkeep` file.

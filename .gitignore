@@ -13,5 +13,5 @@ __pycache__/
 .worktrees/
 
 # Local reports: generated output such as memory-map, may include user memories.
-.agents/reports/local/*
-!.agents/reports/local/.gitkeep
+reports/local/*
+!reports/local/.gitkeep

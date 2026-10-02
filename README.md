@@ -10,7 +10,7 @@ All agent rules live in [AGENTS.md](AGENTS.md); this README covers how to use th
 |---|---|
 | `AGENTS.md` | Single source of agent instructions, read by Codex directly and by Claude Code through `CLAUDE.md` |
 | `.agents/memories/<type>/` | Project memory, one fact per Markdown file (`user`, `feedback`, `project`, `reference`) |
-| `.agents/reports/<category>/` | Committed reports (`plans`, `research`, `reviews`, `incidents`, `architecture`) |
+| `reports/<category>/` | Committed reports (`plans`, `research`, `reviews`, `incidents`, `architecture`) |
 | `.agents/skills/` | Shared skills; `.claude/skills` is a symlink here |
 | `.agents/hooks/` | Standard-library Python hooks registered for both agents |
 | `.agents/tools/` | `memory-lint` and `memory-map` CLIs |
@@ -76,7 +76,7 @@ The `.codex/*.local.*` ignore rule keeps local files out of Git but does not mak
 - Ask an agent to "remember" a decision, correction or pointer; it saves a memory with the `memory-manage` skill.
 - `user` memories (who you are, how you like to work) stay local and are never committed.
 `feedback`, `project` and `reference` memories are shared with the team through git.
-- Ask for plans, research or reviews as reports; agents write them to `.agents/reports/<category>/YYYY-MM-DD-<slug>.html`.
+- Ask for plans, research or reviews as reports; agents write them to `reports/<category>/YYYY-MM-DD-<slug>.html`.
 - Run parallel work in worktrees under `.worktrees/<slug>` (see `AGENTS.md`).
 
 Lint memories and reports before pushing (CI runs the same check):
