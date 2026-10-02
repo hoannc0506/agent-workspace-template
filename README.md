@@ -1,6 +1,6 @@
 # Agent workspace template
 
-A repository template that gives Claude Code and Codex a shared, file-based project memory, shared skills and hooks, and a home for reports.
+A repository template that gives coding agents a shared, file-based project memory, shared skills and hooks, and a home for reports.
 All agent rules live in [AGENTS.md](AGENTS.md).
 
 ## Start a project
