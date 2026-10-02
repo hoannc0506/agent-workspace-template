@@ -38,8 +38,9 @@ Put settings that only one agent understands in `.claude/` or `.codex/`.
 - Add a skill as `.agents/skills/<name>/SKILL.md`; `.claude/skills` is a symlink to that folder, so never add skills there separately.
 - Add a hook script to `.agents/hooks/` and register it in both `.claude/settings.json` and `.codex/config.toml`.
 Hooks must be standard-library Python and fail open (exit 0 on internal errors).
-- Built-in agent memory is turned off in both configs.
-Never write to `~/.claude/projects/*/memory`, Codex memories or any other user-scope memory.
+- Codex built-in memory is enabled; Claude Code built-in memory is disabled.
+Keep shared project memory in `.agents/memories`.
+Never manually write to `~/.claude/projects/*/memory`, Codex memories or any other user-scope memory.
 
 ## Memory
 
@@ -62,7 +63,7 @@ Each type is a category with its own folder.
 | `project` | Goals, constraints, decisions, deadlines and context not visible in the code | shared |
 | `reference` | Pointers to external resources: dashboards, tickets, docs, runbooks | shared |
 
-`user` memories stay on the local machine but inside the project tree, so all memory lives in one place.
+`user` memories stay on the local machine but inside the project tree, so all manually managed memory lives in one place.
 Anything the whole team should follow belongs in `feedback` or `project`, never in `user`.
 
 ### Format

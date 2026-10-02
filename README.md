@@ -24,7 +24,8 @@ Hooks, wired up for both agents:
 - `redact-secrets.py` (prompt submit and tool output) masks secrets in tool output and blocks prompts that contain a known token.
 - `memory-guard.py` (after file edits) lints memories and reports as soon as an agent writes them.
 
-Built-in agent memory is turned off in both configs, so all memory lives in the repository.
+Codex built-in memory is enabled; Claude Code built-in memory is disabled.
+Shared project memory lives in `.agents/memories` for both agents.
 
 ## Requirements
 
@@ -64,7 +65,11 @@ Built-in agent memory is turned off in both configs, so all memory lives in the 
 6. Check that the session starts with a `# Project memory index` block.
 That confirms the hooks are running.
 
-Personal settings go in `.claude/settings.local.json` or `.codex/*.local.*`, both gitignored.
+Personal Claude Code settings go in `.claude/settings.local.json` (gitignored).
+Personal Codex settings go in `~/.codex/config.toml`.
+The shared `.codex/config.toml` contains only hook registration and the repository memory policy, leaving model, reasoning effort, personality, approval policy, sandbox mode and UI preferences to each user.
+Codex project configuration overrides user configuration; see [configuration precedence](https://learn.chatgpt.com/docs/config-file/config-basic).
+The `.codex/*.local.*` ignore rule keeps local files out of Git but does not make Codex load them automatically.
 
 ## Daily use
 

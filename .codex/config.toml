@@ -1,25 +1,12 @@
-# Project-level Codex defaults.
+# Shared Codex project configuration.
 # Codex loads this file only after the repository is trusted.
 # Shared hooks live in .agents/hooks and are also registered in .claude/settings.json.
-
-model = "gpt-5.6-sol"
-model_reasoning_effort = "low"
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
-personality = "pragmatic"
-
-[tui]
-status_line = ["model-with-reasoning", "current-dir", "git-branch", "pull-request-number", "branch-changes", "context-remaining", "thread-title", "task-progress"]
-status_line_use_colors = true
+# Keep model, reasoning, personality, permissions, and UI preferences in
+# ~/.codex/config.toml so this template does not override personal defaults.
 
 [features]
-# Built-in memory is off; project memory lives in .agents/memories (see AGENTS.md).
-memories = false
-
-[desktop]
-conversationDetailMode = "STEPS_PROSE"
-ambient-suggestions-enabled = true
-followUpQueueMode = "queue"
+# Enable Codex built-in memory alongside shared project memory in .agents/memories.
+memories = true
 
 # Hook commands resolve from the git root because Codex runs them in the session cwd.
 
