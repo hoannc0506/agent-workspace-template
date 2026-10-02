@@ -136,6 +136,10 @@ When a report holds a conclusion future sessions need, save a memory that points
 
 ## Git
 
+- Follow Conventional Commits: `<type>: <short imperative summary>` or `<type>(<scope>): <short imperative summary>`.
+Choose the type that describes the change: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf`, `build`, `ci` or `revert`.
+For example: `feat: add memory search`, `fix: handle missing hook input` or `chore: simplify Codex configuration`.
+- Before committing, verify Git's author identity is configured; never rely on an automatically generated name or email.
 - Never commit `.agents/memories/user/` contents (only its `.gitkeep` is tracked).
 - Commit memory changes separately from code changes, with a `memory:` prefix.
 - Do not commit or push unless the user asks.
