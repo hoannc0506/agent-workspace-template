@@ -155,7 +155,7 @@ When a report holds a conclusion future sessions need, save a memory that points
 
 ## Template sync
 
-Projects start as a GitHub fork of the agent-workspace template.
+Projects start as a clone or GitHub fork of the agent-workspace template, with the template as the `upstream` remote.
 Pull template updates with:
 
 ```sh
