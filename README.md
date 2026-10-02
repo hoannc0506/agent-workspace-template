@@ -24,6 +24,12 @@ Hooks, wired up for both agents:
 - `redact-secrets.py` (prompt submit and tool output) masks secrets in tool output and blocks prompts that contain a known token.
 - `memory-guard.py` (after file edits) lints memories and reports as soon as an agent writes them.
 
+Skills, shared by both agents:
+
+- `memory-manage` saves, updates, deletes and reviews project memories.
+- `how` explains how part of the codebase works, and can optionally critique its architecture.
+Adapted from [poteto/how](https://github.com/poteto/how) (MIT, see `.agents/skills/how/LICENSE`) at commit `b1ef429`, with subagent settings made agent-neutral for Claude Code and Codex.
+
 Codex built-in memory is enabled; Claude Code built-in memory is disabled.
 Shared project memory lives in `.agents/memories` for both agents.
 
