@@ -1,5 +1,9 @@
 {
   "autoMemoryEnabled": false,
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "defaultMode": "default"
   },
