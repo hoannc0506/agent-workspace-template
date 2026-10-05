@@ -3,6 +3,7 @@ name: run-e2e-before-fix
 description: Reproduce every bug end to end before changing code.
 type: feedback
 tags: [demo, testing, bugfix]
+update_at: 2026-10-02
 ---
 
 Reproduce a reported bug the way a user would hit it before writing a fix.

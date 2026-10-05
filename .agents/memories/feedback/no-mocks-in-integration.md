@@ -3,6 +3,7 @@ name: no-mocks-in-integration
 description: Integration tests hit a real Postgres container, never mocks.
 type: feedback
 tags: [demo, testing, db]
+update_at: 2026-10-02
 ---
 
 Integration tests run against the Postgres container from docker compose.

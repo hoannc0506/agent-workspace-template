@@ -3,6 +3,7 @@ name: billing-rewrite-freeze
 description: No schema changes to billing tables until the rewrite lands on 2026-12-01.
 type: project
 tags: [demo, svc:billing, db]
+update_at: 2026-10-02
 ---
 
 Billing table schemas are frozen until 2026-12-01.
