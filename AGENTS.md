@@ -30,7 +30,7 @@ reports/<category>/       reports (.html, .md, .svg, .png)
 reports/local/            local generated output (memory-map), gitignored
 .claude/                  Claude Code only settings
 .codex/                   Codex only settings
-.worktrees/<name>/        local git worktrees, gitignored
+.worktrees/<type>/<slug>/ local git worktrees, gitignored
 ```
 
 - Put anything both agents use in `.agents/`.
@@ -130,7 +130,7 @@ To add a category, create its folder with a `.gitkeep` file.
 - Prefer one self-contained `.html` file; use `.md` for short text-only reports and `.svg` or `.png` for standalone diagrams.
 - HTML style: plain light theme, light background, dark text, minimal CSS, system fonts, no dark mode, no heavy visual effects.
 - Add simple diagrams where they aid explanation (flows, sequences, state machines, data models), as inline SVG or HTML/CSS boxes with few boxes, clear labels, thin lines, and no gradients or shadows.
-- For architecture use the C4 model: one level per diagram, each labeled with its C4 level.
+- For architecture use the C4 model with one level per diagram.
 - Reports are committed and shared.
 When a report holds a conclusion future sessions need, save a memory that points to it with a `report:<category>/<file>` tag.
 
@@ -147,16 +147,19 @@ For example: `feat: add memory search`, `fix: handle missing hook input` or `cho
 ## Worktrees
 
 - Create local worktrees only in `.worktrees/` at the repository root (gitignored), never in a sibling folder, a temp folder or a user-scope location.
-- Name each worktree with a short kebab-case slug of 1 to 3 words that says what the work is, for example `memory-map`, `fix-redaction` or `ci-cache`.
-- Use the same slug for the folder and the branch:
+- Name each branch and worktree `<type>/<slug>`.
+`<type>` is the Conventional Commits type that best describes the work (see Git above).
+`<slug>` is a short kebab-case name of 1 to 3 words that says what the work is.
+For example `feat/memory-map`, `fix/redaction` or `ci/cache`.
+- Use the same name for the folder and the branch:
 
   ```sh
-  git worktree add .worktrees/<slug> -b <slug>
+  git worktree add .worktrees/<type>/<slug> -b <type>/<slug>
   ```
 
-- Do not put dates, ticket numbers, agent names or random suffixes in the slug.
+- Do not put dates, ticket numbers, agent names or random suffixes in the name.
 - `user` memories are not copied into a new worktree because they are gitignored; shared memories written in a worktree reach `main` when its branch is merged.
-- When the branch is merged or abandoned, remove the worktree with `git worktree remove .worktrees/<slug>` and delete the branch.
+- When the branch is merged or abandoned, remove the worktree with `git worktree remove .worktrees/<type>/<slug>` and delete the branch.
 
 ## Template sync
 

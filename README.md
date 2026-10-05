@@ -83,7 +83,7 @@ The `.codex/*.local.*` ignore rule keeps local files out of Git but does not mak
 - `user` memories (who you are, how you like to work) stay local and are never committed.
 `feedback`, `project` and `reference` memories are shared with the team through git.
 - Ask for plans, research or reviews as reports; agents write them to `reports/<category>/YYYY-MM-DD-<slug>.html`.
-- Run parallel work in worktrees under `.worktrees/<slug>` (see `AGENTS.md`).
+- Run parallel work in worktrees under `.worktrees/<type>/<slug>` (see `AGENTS.md`).
 
 Lint memories and reports before pushing (CI runs the same check):
 
