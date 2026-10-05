@@ -59,7 +59,7 @@ def main():
             return 0
         verdict = "FAILED" if out.errors else "passed with warnings"
         text = "\n".join(
-            [f"memory-lint {verdict} for the file(s) you just wrote. Fix the errors now (rules: AGENTS.md, memory-manage skill):"]
+            [f"memory-lint {verdict} for the file(s) you just wrote. Fix the errors now (rules: .agents/MEMORY.md, memory-manage skill):"]
             + out.errors + out.warnings
         )
         print(json.dumps({

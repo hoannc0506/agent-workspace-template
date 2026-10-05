@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Regenerate the memory index, .agents/MEMORY.md, from the memory headers.
+"""Regenerate the memory index in .agents/MEMORY.md from the memory headers.
+Only the part below the marker line is rewritten; the rules above it are kept.
 
 Usage:
   memory-index           rewrite .agents/MEMORY.md
@@ -28,9 +29,15 @@ def main(argv):
         print(__doc__.strip())
         return 0
     lint = load_lint()
-    expected = lint.build_index(lint.load_memories())
-    current = lint.INDEX.read_text(encoding="utf-8") if lint.INDEX.is_file() else None
     rel = lint.INDEX.relative_to(ROOT).as_posix()
+    if not lint.INDEX.is_file():
+        print(f"memory-index: {rel} is missing")
+        return 1
+    current = lint.INDEX.read_text(encoding="utf-8")
+    expected = lint.build_index(lint.load_memories(), current)
+    if expected is None:
+        print(f"memory-index: {rel} has no marker line: {lint.INDEX_MARKER}")
+        return 1
     if "--check" in argv:
         if current != expected:
             print(f"memory-index: {rel} is out of date; run .agents/tools/memory-index")
