@@ -75,21 +75,12 @@ One line per shared memory: name, description, tags.
 
 ### feedback
 
-- [html-reports-light-theme](memories/feedback/html-reports-light-theme.md): Reports are self-contained light-theme HTML with simple C4 diagrams. [demo, reports, style]
-- [no-mocks-in-integration](memories/feedback/no-mocks-in-integration.md): Integration tests hit a real Postgres container, never mocks. [demo, testing, db]
-- [run-e2e-before-fix](memories/feedback/run-e2e-before-fix.md): Reproduce every bug end to end before changing code. [demo, testing, bugfix]
-- [terse-commit-messages](memories/feedback/terse-commit-messages.md): Commit subjects under 60 chars, imperative, conventional prefix. [demo, git, style]
+(none)
 
 ### project
 
-- [billing-rewrite-freeze](memories/project/billing-rewrite-freeze.md): No schema changes to billing tables until the rewrite lands on 2026-12-01. [demo, svc:billing, db]
-- [ci-runner-limits](memories/project/ci-runner-limits.md): CI runners have 4 GB RAM; parallel test workers capped at 2. [demo, ci, testing]
-- [e2e-test-setup](memories/project/e2e-test-setup.md): E2E suite runs against the docker compose stack in tests/e2e. [demo, testing, ci]
-- [postgres-version-pin](memories/project/postgres-version-pin.md): Postgres pinned to 16.4 until the 2026-11-15 migration window. [demo, db, infra]
-- [production-deploy-schedule](memories/project/production-deploy-schedule.md): Production deploys only Tue and Thu after QA sign-off, from 2026-10-01. [demo, deploy, release, qa]
+(none)
 
 ### reference
 
-- [grafana-billing](memories/reference/grafana-billing.md): Billing latency and error dashboards in Grafana. [demo, svc:billing, observability]
-- [jira-board](memories/reference/jira-board.md): Sprint board for the platform team. [demo, jira:plat, planning]
-- [oncall-runbook](memories/reference/oncall-runbook.md): On-call runbook for paging, escalation and rollback. [demo, oncall, docs]
+(none)
