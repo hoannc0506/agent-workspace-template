@@ -5,8 +5,8 @@ Usage:
   memory-map [--out PATH] [--shared] [--open]
 
   --out PATH   output file (default: reports/local/memory-map.html, gitignored)
-  --shared     leave out local user memories; required for output inside
-               reports outside local/, which is committed
+  --shared     leave out local user memories; required for output outside
+               reports/, which may be committed (e.g. docs/)
   --open       open the file in the default browser
 
 The map is a radial tree (root -> memory type -> memory). Dashed lines are
@@ -54,6 +54,7 @@ def collect(lint, shared):
             "tags": tags if isinstance(tags, list) else [],
             "body": m.body.strip() if not m.parse_error else m.text.strip(),
             "path": m.rel,
+            "updated": m.fields.get("update_at", "") if isinstance(m.fields.get("update_at"), str) else "",
             "local": m.local,
             "links": sorted({t.strip() for t in lint.LINK.findall(m.text)} & names),
             "problems": problems.get(m.rel, []),
@@ -84,8 +85,8 @@ def main(argv):
     args = parser.parse_args(argv)
 
     out = args.out.resolve()
-    if REPORTS in out.parents and LOCAL_REPORTS not in out.parents and not args.shared:
-        parser.error("output inside reports is committed; add --shared to leave out local user memories")
+    if REPORTS not in out.parents and not args.shared:
+        parser.error("output outside reports/ may be committed; add --shared to leave out local user memories")
 
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render(collect(load_lint(), args.shared), args.shared), encoding="utf-8")
@@ -295,7 +296,7 @@ function select(n) {
     ? `<p class="links"><strong>${title}:</strong> ${ids.map(i => `<a data-id="${esc(i)}">${esc(i)}</a>`).join("")}</p>` : "";
   panel.innerHTML = `
     <h2>${esc(n.id)} <span class="badge" style="background:${color(n.type)}">${esc(n.type)}${n.local ? " · local" : ""}</span></h2>
-    <div class="path">${esc(n.path)}</div>
+    <div class="path">${esc(n.path)}${n.updated ? ` · updated ${esc(n.updated)}` : ""}</div>
     <p class="desc">${esc(n.description) || '<span class="empty">No description</span>'}</p>
     <div class="tags">${n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
     ${n.problems.length ? `<div class="problems">${n.problems.map(p => `<div>${esc(p)}</div>`).join("")}</div>` : ""}

@@ -12,6 +12,9 @@ __pycache__/
 # Local git worktrees.
 .worktrees/
 
-# Local reports: generated output such as memory-map, may include user memories.
-reports/local/*
-!reports/local/.gitkeep
+# Reports are local working output; only the category folders are tracked.
+# Put anything the team should keep in docs/.
+reports/*
+!reports/*/
+reports/*/*
+!reports/*/.gitkeep

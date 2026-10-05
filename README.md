@@ -9,20 +9,24 @@ All agent rules live in [AGENTS.md](AGENTS.md); this README covers how to use th
 | Path | Purpose |
 |---|---|
 | `AGENTS.md` | Single source of agent instructions, read by Codex directly and by Claude Code through `CLAUDE.md` |
+| `.agents/MEMORY.md` | Memory index, one line per shared memory, read by agents at session start |
 | `.agents/memories/<type>/` | Project memory, one fact per Markdown file (`user`, `feedback`, `project`, `reference`) |
-| `reports/<category>/` | Committed reports (`plans`, `research`, `reviews`, `incidents`, `architecture`) |
+| `docs/` | Committed documentation shared with the team |
+| `reports/<category>/` | Local, gitignored reports (`plans`, `research`, `reviews`, `incidents`, `architecture`) |
 | `.agents/skills/` | Shared skills; `.claude/skills` is a symlink here |
 | `.agents/hooks/` | Standard-library Python hooks registered for both agents |
-| `.agents/tools/` | `memory-lint` and `memory-map` CLIs |
+| `.agents/tools/` | `memory-lint`, `memory-index` and `memory-map` CLIs |
 | `.claude/settings.json` | Claude Code project settings and hook registration |
 | `.codex/config.toml` | Codex project settings and hook registration |
 | `.github/workflows/agents-lint.yml` | CI that runs `memory-lint` on every push and PR |
 
 Hooks, wired up for both agents:
 
-- `memory-index.py` (session start) prints a one-line index of every memory so agents know what exists without reading it all.
 - `redact-secrets.py` (prompt submit and tool output) masks secrets in tool output and blocks prompts that contain a known token.
-- `memory-guard.py` (after file edits) lints memories and reports as soon as an agent writes them.
+- `memory-guard.py` (after file edits) lints memories, the memory index and reports as soon as an agent writes them.
+
+The memory index is a committed file, not a hook: `AGENTS.md` tells agents to read `.agents/MEMORY.md` at session start, and `.agents/tools/memory-index` regenerates it after every memory change.
+`memory-lint` (and CI) fails when the index is out of date.
 
 Skills, shared by both agents:
 
@@ -62,14 +66,14 @@ Shared project memory lives in `.agents/memories` for both agents.
 
    ```sh
    grep -rl '^tags:.*\bdemo\b' .agents/memories | xargs -r rm
+   .agents/tools/memory-index
    ```
 
 4. Add your project's own instructions to `AGENTS.md` under a new section, keeping the template sections intact so template updates merge cleanly.
 5. Open the project in your agents:
    - Claude Code: run `claude` in the repository and approve the project hooks when asked.
    - Codex: open the project, trust it so `.codex/config.toml` loads, then review and trust the hooks with `/hooks`.
-6. Check that the session starts with a `# Project memory index` block.
-That confirms the hooks are running.
+6. Ask the agent what is in the memory index; it should answer from `.agents/MEMORY.md`.
 
 Personal Claude Code settings go in `.claude/settings.local.json` (gitignored).
 Personal Codex settings go in `~/.codex/config.toml`.
@@ -82,7 +86,8 @@ The `.codex/*.local.*` ignore rule keeps local files out of Git but does not mak
 - Ask an agent to "remember" a decision, correction or pointer; it saves a memory with the `memory-manage` skill.
 - `user` memories (who you are, how you like to work) stay local and are never committed.
 `feedback`, `project` and `reference` memories are shared with the team through git.
-- Ask for plans, research or reviews as reports; agents write them to `reports/<category>/YYYY-MM-DD-<slug>.html`.
+- Ask for plans, research or reviews as reports; agents write them to `reports/<category>/YYYY-MM-DD-<slug>.html`, which is gitignored.
+Move anything the team should keep into `docs/`.
 - Run parallel work in worktrees under `.worktrees/<type>/<slug>` (see `AGENTS.md`).
 
 Lint memories and reports before pushing (CI runs the same check):
@@ -104,7 +109,7 @@ git fetch upstream && git merge upstream/main
 ```
 
 The template owns `AGENTS.md`, `.agents/skills`, `.agents/hooks`, `.agents/tools`, the base `.claude/` and `.codex/` settings and CI.
-Your project owns its memories, reports and local settings.
+Your project owns its memories, memory index, docs, reports and local settings.
 On conflicts, keep your project content and take the template version of template-owned files.
 
 ## Change the template itself

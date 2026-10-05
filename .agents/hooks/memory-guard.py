@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""PostToolUse hook (Claude Code and Codex): lint memories and reports right after
-an agent writes them, and feed any errors back so the agent fixes them in the
-same turn.
+"""PostToolUse hook (Claude Code and Codex): lint memories, the memory index and
+reports right after an agent writes them, and feed any errors back so the agent
+fixes them in the same turn (including a stale .agents/MEMORY.md).
 
 Edited files come from:
   Claude  Write/Edit/MultiEdit -> tool_input.file_path
@@ -19,6 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WATCHED = (ROOT / ".agents" / "memories", ROOT / "reports")
+INDEX = ROOT / ".agents" / "MEMORY.md"
 PATCH_PATH = re.compile(r"^\*\*\* (?:Add File|Update File|Move to): (.+)$", re.MULTILINE)
 
 
@@ -42,7 +43,7 @@ def edited_paths(data):
     for r in raw:
         p = Path(r)
         p = (p if p.is_absolute() else cwd / p).resolve()
-        if p.is_file() and any(w in p.parents for w in WATCHED):
+        if p.is_file() and (p == INDEX or any(w in p.parents for w in WATCHED)):
             paths.append(str(p))
     return paths
 

@@ -10,14 +10,6 @@ memories = true
 
 # Hook commands resolve from the git root because Codex runs them in the session cwd.
 
-[[hooks.SessionStart]]
-[[hooks.SessionStart.hooks]]
-type = "command"
-command = 'python3 "$(git rev-parse --show-toplevel)/.agents/hooks/memory-index.py"'
-timeout = 10
-additionalContextLimit = 8000
-statusMessage = "Loading project memory index"
-
 [[hooks.UserPromptSubmit]]
 [[hooks.UserPromptSubmit.hooks]]
 type = "command"

@@ -22,11 +22,13 @@ If you see one, even if it is not caused by what you are working on right now, s
 AGENTS.md                 instructions for all agents (this file)
 CLAUDE.md                 imports AGENTS.md for Claude Code
 .agents/                  shared by every agent
+  MEMORY.md               memory index, one line per shared memory (generated)
   memories/<type>/        project memory, one fact per .md file
   skills/<skill>/SKILL.md shared skills (Codex reads them here; .claude/skills links here)
   hooks/                  hook scripts used by both agents
-  tools/                  CLI tools (memory-lint, memory-map)
-reports/<category>/       reports (.html, .md, .svg, .png)
+  tools/                  CLI tools (memory-lint, memory-index, memory-map)
+docs/                     committed documentation shared with the team
+reports/<category>/       local reports (.html, .md, .svg, .png), gitignored
 reports/local/            local generated output (memory-map), gitignored
 .claude/                  Claude Code only settings
 .codex/                   Codex only settings
@@ -46,7 +48,8 @@ Never manually write to `~/.claude/projects/*/memory`, Codex memories or any oth
 
 ### Reading
 
-- At session start a hook prints the memory index: one line per memory with its type, name, description and tags.
+- At the start of every session, read `.agents/MEMORY.md`, the memory index: one line per shared memory with its name, description and tags.
+Also read every file in `.agents/memories/user/`; local `user` memories are not in the index.
 - Open a memory's file (`.agents/memories/<type>/<name>.md`) only when its description is relevant to the current task.
 - Memories record what was true when they were written.
 Before acting on a memory that names a file, function, flag or command, check that it still exists.
@@ -74,6 +77,7 @@ name: run-e2e-before-fix
 description: Reproduce every bug end to end before changing code.
 type: feedback
 tags: [testing, bugfix]
+update_at: 2026-10-01
 ---
 
 Reproduce a reported bug the way a user would hit it before writing a fix.
@@ -83,12 +87,14 @@ Reproduce a reported bug the way a user would hit it before writing a fix.
 Related: [[e2e-test-setup]]
 ```
 
-- The header has exactly four fields: `name`, `description`, `type`, `tags`.
+- The header has exactly five fields: `name`, `description`, `type`, `tags`, `update_at`.
 - `name` is kebab-case, equals the filename without `.md` and is unique across all types.
 - `description` is one line under 200 characters, specific enough to judge relevance from the index alone.
 - `type` equals the folder the file is in.
 - `tags` is a list of 1 to 5 lowercase tags.
-References are tags too, for example `jira:proj-12`, `svc:billing` or `report:plans/2026-10-01-memory-design.html`.
+References are tags too, for example `jira:proj-12`, `svc:billing` or `doc:architecture/billing.md`.
+- `update_at` is the day the memory was last modified, as `YYYY-MM-DD`.
+Set it whenever you create or change the file.
 - The body holds one fact.
 `feedback` and `project` memories add `**Why:**` and `**How to apply:**` lines.
 - Use absolute dates (2026-10-01), never relative ones.
@@ -113,26 +119,35 @@ Do not save:
 - Always use the `memory-manage` skill to create, update, delete or review memories.
 - Update an existing memory instead of creating a near-duplicate.
 - Delete memories that turn out to be wrong.
-- A hook lints memory and report files after every write; fix any error it reports immediately.
+- After every create, update, rename or delete, run `.agents/tools/memory-index` to regenerate `.agents/MEMORY.md`, and commit the index with the memory change.
+Never edit the index by hand.
+- A hook lints memory, index and report files after every write; fix any error it reports immediately.
 - Run `.agents/tools/memory-lint` before pushing; CI runs it on every push and PR.
 
 ### Visualizing
 
 - `.agents/tools/memory-map` writes a mind-map HTML of all memories to `reports/local/memory-map.html` (gitignored, because it includes local `user` memories).
-- Add `--open` to open it in a browser, or `--shared --out reports/<category>/<file>.html` to produce a committable map without `user` memories.
+- Add `--open` to open it in a browser, or `--shared --out docs/<file>.html` to produce a committable map without `user` memories.
 
 ## Reports
 
 - Write reports to `reports/<category>/YYYY-MM-DD-<slug>.<ext>`, never loose in the repo root, in `.agents/` or in a temp folder.
 - Categories: `plans`, `research`, `reviews`, `incidents`, `architecture`.
-- `local` holds generated, local-only output; it is gitignored and not linted, so never put a report meant for the team there.
+- `local` holds generated output such as the memory map; it is not linted.
 To add a category, create its folder with a `.gitkeep` file.
 - Prefer one self-contained `.html` file; use `.md` for short text-only reports and `.svg` or `.png` for standalone diagrams.
 - HTML style: plain light theme, light background, dark text, minimal CSS, system fonts, no dark mode, no heavy visual effects.
 - Add simple diagrams where they aid explanation (flows, sequences, state machines, data models), as inline SVG or HTML/CSS boxes with few boxes, clear labels, thin lines, and no gradients or shadows.
 - For architecture use the C4 model with one level per diagram.
-- Reports are committed and shared.
-When a report holds a conclusion future sessions need, save a memory that points to it with a `report:<category>/<file>` tag.
+- Reports are local working output: `reports/` is gitignored except the category `.gitkeep` files.
+- When a report holds content the team or future sessions need, move that content into `docs/` and commit it there.
+If a memory should point to it, tag the memory `doc:<path under docs/>`.
+Never reference a report from a shared memory, because teammates do not have it.
+
+## Docs
+
+- `docs/` holds committed documentation the team shares: architecture, decisions, guides and promoted report content.
+- Write `.md` by default, following the long Markdown rule above; the report HTML style applies to any `.html` file here.
 
 ## Git
 
@@ -171,5 +186,5 @@ git fetch upstream && git merge upstream/main
 ```
 
 The template owns `AGENTS.md`, `.agents/skills`, `.agents/hooks`, `.agents/tools`, the base `.claude/` and `.codex/` settings and CI.
-The project owns its memories, reports and local settings.
+The project owns its memories, memory index, docs, reports and local settings.
 When resolving merge conflicts, keep project content and take template versions of template-owned files.
