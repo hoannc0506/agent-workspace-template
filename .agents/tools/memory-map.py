@@ -29,7 +29,7 @@ DEFAULT_OUT = LOCAL_REPORTS / "memory-map.html"
 
 
 def load_lint():
-    loader = SourceFileLoader("memory_lint", str(ROOT / ".agents" / "tools" / "memory-lint"))
+    loader = SourceFileLoader("memory_lint", str(ROOT / ".agents" / "tools" / "memory-lint.py"))
     module = importlib.util.module_from_spec(importlib.util.spec_from_loader(loader.name, loader))
     loader.exec_module(module)
     return module

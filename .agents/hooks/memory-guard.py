@@ -24,7 +24,7 @@ PATCH_PATH = re.compile(r"^\*\*\* (?:Add File|Update File|Move to): (.+)$", re.M
 
 
 def load_lint():
-    loader = SourceFileLoader("memory_lint", str(ROOT / ".agents" / "tools" / "memory-lint"))
+    loader = SourceFileLoader("memory_lint", str(ROOT / ".agents" / "tools" / "memory-lint.py"))
     module = importlib.util.module_from_spec(importlib.util.spec_from_loader(loader.name, loader))
     loader.exec_module(module)
     return module

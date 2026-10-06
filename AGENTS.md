@@ -21,7 +21,7 @@ CLAUDE.md                 imports AGENTS.md for Claude Code
   memories/<type>/        project memory, one fact per .md file
   skills/<skill>/SKILL.md shared skills (.claude/skills links here)
   hooks/                  hook scripts used by both agents
-  tools/                  CLI tools (memory-lint, memory-index, memory-map)
+  tools/                  CLI tools (memory-lint.py, memory-index.py, memory-map.py)
 docs/                     committed documentation shared with the team
 reports/<category>/       local reports, gitignored
 .claude/  .codex/         settings for one agent only
@@ -37,7 +37,7 @@ Hooks are standard-library Python and fail open (exit 0 on internal errors).
 
 - At the start of every session, read `.agents/MEMORY.md`: the memory rules and an index of shared memories.
 Also read every file in `.agents/memories/user/` (local, not indexed).
-- Use the `memory-manage` skill for every memory change, then run `.agents/tools/memory-index`.
+- Use the `memory-manage` skill for every memory change, then run `.agents/tools/memory-index.py`.
 - Keep project memory only in `.agents/memories`; never write to `~/.claude/projects/*/memory`, Codex memories or any other user-scope memory.
 
 ## Reports and docs

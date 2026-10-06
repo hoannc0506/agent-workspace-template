@@ -12,7 +12,7 @@ Agent rules live in [AGENTS.md](AGENTS.md) and memory rules in [.agents/MEMORY.m
 | `.agents/memories/<type>/` | Project memory, one fact per file (`user` is local; `feedback`, `project`, `reference` are shared) |
 | `.agents/skills/` | Shared skills: `memory-manage`, and `how` (adapted from [poteto/how](https://github.com/poteto/how), MIT) |
 | `.agents/hooks/` | `redact-secrets.py` masks secrets; `memory-guard.py` lints memories and reports as they are written |
-| `.agents/tools/` | `memory-lint`, `memory-index` and `memory-map` |
+| `.agents/tools/` | `memory-lint.py`, `memory-index.py` and `memory-map.py` |
 | `docs/` | Committed team documentation |
 | `reports/<category>/` | Local, gitignored reports |
 | `.claude/`, `.codex/` | Per-agent settings and hook registration |
@@ -49,7 +49,7 @@ Personal settings go in `.claude/settings.local.json` (gitignored) or `~/.codex/
 - Ask an agent to "remember" something; it saves a memory with the `memory-manage` skill.
 - Ask for plans, research or reviews; agents write them to `reports/<category>/`, and anything worth keeping moves to `docs/`.
 - Run parallel work in worktrees under `.worktrees/<type>/<slug>`.
-- Before pushing, run `.agents/tools/memory-lint`; view memories as a mind map with `.agents/tools/memory-map --open`.
+- Before pushing, run `.agents/tools/memory-lint.py`; view memories as a mind map with `.agents/tools/memory-map.py --open`.
 
 ## Related: agent-skills
 

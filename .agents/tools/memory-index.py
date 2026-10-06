@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def load_lint():
-    loader = SourceFileLoader("memory_lint", str(ROOT / ".agents" / "tools" / "memory-lint"))
+    loader = SourceFileLoader("memory_lint", str(ROOT / ".agents" / "tools" / "memory-lint.py"))
     module = importlib.util.module_from_spec(importlib.util.spec_from_loader(loader.name, loader))
     loader.exec_module(module)
     return module
@@ -40,7 +40,7 @@ def main(argv):
         return 1
     if "--check" in argv:
         if current != expected:
-            print(f"memory-index: {rel} is out of date; run .agents/tools/memory-index")
+            print(f"memory-index: {rel} is out of date; run .agents/tools/memory-index.py")
             return 1
         print(f"memory-index: {rel} is up to date")
         return 0

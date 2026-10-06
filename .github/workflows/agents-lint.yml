@@ -13,4 +13,4 @@ jobs:
         with:
           python-version: "3.12"
       - name: Lint memories and reports
-        run: python3 .agents/tools/memory-lint
+        run: python3 .agents/tools/memory-lint.py

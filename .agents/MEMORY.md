@@ -62,16 +62,16 @@ Do not save anything derivable from the code, git history, `AGENTS.md` or an exi
 
 - Always use the `memory-manage` skill to create, update, delete or review memories.
 - Update an existing memory instead of creating a near-duplicate, and delete memories that turn out to be wrong.
-- After every change, run `.agents/tools/memory-index` to regenerate the index below, and commit it with the memory change.
+- After every change, run `.agents/tools/memory-index.py` to regenerate the index below, and commit it with the memory change.
 - A hook lints memory, index and report files after every write; fix any error it reports immediately.
-- Run `.agents/tools/memory-lint` before pushing; CI runs it on every push and PR.
-- `.agents/tools/memory-map --open` renders all memories as a mind map in `reports/local/memory-map.html`.
+- Run `.agents/tools/memory-lint.py` before pushing; CI runs it on every push and PR.
+- `.agents/tools/memory-map.py --open` renders all memories as a mind map in `reports/local/memory-map.html`.
 
 ## Index
 
 One line per shared memory: name, description, tags.
 
-<!-- Generated below by .agents/tools/memory-index; do not edit by hand. -->
+<!-- Generated below by .agents/tools/memory-index.py; do not edit by hand. -->
 
 ### feedback
 
