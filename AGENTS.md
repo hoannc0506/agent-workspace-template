@@ -29,6 +29,7 @@ reports/<category>/       local reports, gitignored
 ```
 
 - Put anything both agents use in `.agents/`; add skills only in `.agents/skills/`.
+- Subagents are defined in `.claude/agents/` (Claude Code) and `.codex/agents/` (Codex): `code-reviewer`, `security-auditor`, `test-engineer`, `web-performance-auditor`, and the Claude-only `builder`.
 - Register every hook in both `.claude/settings.json` and `.codex/config.toml`.
 Hooks are standard-library Python and fail open (exit 0 on internal errors).
 
@@ -58,9 +59,3 @@ Also read every file in `.agents/memories/user/` (local, not indexed).
 - Create worktrees only as `.worktrees/<type>/<slug>` on a branch of the same name: `git worktree add .worktrees/<type>/<slug> -b <type>/<slug>`.
 - `<type>` is the Conventional Commits type; `<slug>` is 1 to 3 kebab-case words, with no dates, tickets, agent names or random suffixes.
 - Remove the worktree and branch once it is merged or abandoned.
-
-## Template sync
-
-- The template is the `upstream` remote; update with `git fetch upstream && git merge upstream/main`.
-- The template owns `AGENTS.md`, `.agents/skills`, `.agents/hooks`, `.agents/tools`, the base `.claude/` and `.codex/` settings, CI and the rules part of `.agents/MEMORY.md`.
-- The project owns its memories, the memory index, docs, reports and local settings; on conflicts keep project content and take template versions of template-owned files.

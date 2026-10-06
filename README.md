@@ -16,6 +16,7 @@ Agent rules live in [AGENTS.md](AGENTS.md) and memory rules in [.agents/MEMORY.m
 | `docs/` | Committed team documentation |
 | `reports/<category>/` | Local, gitignored reports |
 | `.claude/`, `.codex/` | Per-agent settings and hook registration |
+| `.claude/agents/`, `.codex/agents/` | Subagents: `code-reviewer`, `security-auditor`, `test-engineer` and `web-performance-auditor` for both (from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), MIT), and the Claude-only `builder` |
 
 CI runs `memory-lint` on every push and PR.
 Example memories live on the `demo` branch.
@@ -49,6 +50,21 @@ Personal settings go in `.claude/settings.local.json` (gitignored) or `~/.codex/
 - Ask for plans, research or reviews; agents write them to `reports/<category>/`, and anything worth keeping moves to `docs/`.
 - Run parallel work in worktrees under `.worktrees/<type>/<slug>`.
 - Before pushing, run `.agents/tools/memory-lint`; view memories as a mind map with `.agents/tools/memory-map --open`.
+
+## Related: agent-skills
+
+[addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) is a set of engineering skills, slash commands and subagents for coding agents, from spec and plan to build, review and ship.
+This template does not need it: its subagents are copied into `.claude/agents/` and `.codex/agents/`, and the Claude-only `builder` subagent is a self-contained adaptation of its `/build` workflow.
+Install it for the full skill set:
+
+```sh
+# Claude Code
+/plugin marketplace add addyosmani/agent-skills
+/plugin install agent-skills@addy-agent-skills
+
+# Codex and other agents, through the skills CLI
+npx skills add addyosmani/agent-skills
+```
 
 ## Update from the template
 
