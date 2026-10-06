@@ -1,0 +1,390 @@
+#!/usr/bin/env python3
+"""Render project memories as a self-contained mind-map HTML file.
+
+Usage:
+  memory-map [--out PATH] [--shared] [--open]
+
+  --out PATH   output file (default: .agents/reports/local/memory-map.html, gitignored)
+  --shared     leave out local user memories; required for output inside
+               .agents/reports outside local/, which is committed
+  --open       open the file in the default browser
+
+The map is a radial tree (root -> memory type -> memory). Dashed lines are
+[[name]] links. Click a memory to see its header, body and lint errors.
+"""
+import argparse
+import html
+import importlib.util
+import json
+import sys
+import webbrowser
+from datetime import datetime
+from importlib.machinery import SourceFileLoader
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+REPORTS = ROOT / ".agents" / "reports"
+LOCAL_REPORTS = REPORTS / "local"
+DEFAULT_OUT = LOCAL_REPORTS / "memory-map.html"
+
+
+def load_lint():
+    loader = SourceFileLoader("memory_lint", str(ROOT / ".agents" / "tools" / "memory-lint"))
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(loader.name, loader))
+    loader.exec_module(module)
+    return module
+
+
+def collect(lint, shared):
+    report = lint.lint()
+    problems = {}
+    for line in report.errors + report.warnings:
+        rel = line.split(":", 1)[0]
+        problems.setdefault(rel, []).append(line[len(rel) + 1:])
+
+    memories = [m for m in lint.load_memories() if not (shared and m.local)]
+    names = {m.name for m in memories if m.name}
+    nodes = []
+    for m in memories:
+        tags = m.fields.get("tags")
+        nodes.append({
+            "id": m.name or m.path.stem,
+            "type": m.folder if m.folder in lint.TYPES else "misplaced",
+            "description": m.fields.get("description", "") if isinstance(m.fields.get("description"), str) else "",
+            "tags": tags if isinstance(tags, list) else [],
+            "body": m.body.strip() if not m.parse_error else m.text.strip(),
+            "path": m.rel,
+            "local": m.local,
+            "links": sorted({t.strip() for t in lint.LINK.findall(m.text)} & names),
+            "problems": problems.get(m.rel, []),
+        })
+    types = list(lint.TYPES)
+    if shared:
+        types = [t for t in types if t not in lint.LOCAL_TYPES]
+    if any(n["type"] == "misplaced" for n in nodes):
+        types.append("misplaced")
+    return {"types": types, "nodes": nodes, "local_types": list(lint.LOCAL_TYPES)}
+
+
+def render(data, shared):
+    generated = datetime.now().strftime("%Y-%m-%d %H:%M")
+    scope = "shared memories only" if shared else "includes local user memories, do not commit"
+    payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    return (TEMPLATE
+            .replace("__PROJECT__", html.escape(ROOT.name))
+            .replace("__META__", html.escape(f"{len(data['nodes'])} memories · {scope} · generated {generated}"))
+            .replace("__DATA__", payload))
+
+
+def main(argv):
+    parser = argparse.ArgumentParser(prog="memory-map", description="Render memories as a mind-map HTML file.")
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--shared", action="store_true", help="leave out local user memories")
+    parser.add_argument("--open", action="store_true", help="open the result in a browser")
+    args = parser.parse_args(argv)
+
+    out = args.out.resolve()
+    if REPORTS in out.parents and LOCAL_REPORTS not in out.parents and not args.shared:
+        parser.error("output inside .agents/reports is committed; add --shared to leave out local user memories")
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(render(collect(load_lint(), args.shared), args.shared), encoding="utf-8")
+    print(f"memory-map: wrote {out}")
+    if args.open:
+        webbrowser.open(out.as_uri())
+    return 0
+
+
+TEMPLATE = r"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory map</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --muted: #656d76; --line: #d0d7de; --soft: #f6f8fa;
+    --root: #1f2328; --user: #8250df; --feedback: #0969da; --project: #1a7f37;
+    --reference: #bc4c00; --misplaced: #cf222e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+    padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: 16px; margin: 0; }
+  .meta { color: var(--muted); font-size: 12px; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
+  input[type=search] { width: 220px; max-width: 100%; padding: 5px 8px; font: inherit;
+    border: 1px solid var(--line); border-radius: 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px; }
+  .legend button { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px;
+    font: inherit; font-size: 12px; color: var(--fg); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 999px; cursor: pointer; }
+  .legend button.off { opacity: .4; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  main { flex: 1; display: flex; min-height: 0; }
+  #stage { flex: 1; position: relative; min-width: 0; }
+  svg { width: 100%; height: 100%; display: block; cursor: grab; user-select: none; }
+  svg.dragging { cursor: grabbing; }
+  .edge { fill: none; stroke: var(--line); stroke-width: 1.2; }
+  .link { fill: none; stroke-width: 1.2; stroke-dasharray: 4 3; opacity: .7; }
+  .node { cursor: pointer; outline: none; }
+  .node:focus-visible circle { stroke: var(--fg); stroke-width: 2.5; }
+  .node circle { stroke: var(--bg); stroke-width: 2; }
+  .node text { font-size: 12px; fill: var(--fg); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+  .node.branch text { font-size: 13px; font-weight: 600; }
+  .node.root text { font-size: 14px; font-weight: 600; }
+  .node.selected circle { stroke: var(--fg); stroke-width: 2.5; }
+  .node.bad circle { stroke: var(--misplaced); stroke-width: 2.5; stroke-dasharray: 2 2; }
+  .dim { opacity: .12; }
+  .hint { position: absolute; left: 12px; bottom: 10px; color: var(--muted); font-size: 12px; }
+  .zoom { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 4px; }
+  .zoom button { width: 28px; height: 28px; font: inherit; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+  aside { width: 360px; border-left: 1px solid var(--line); overflow: auto; padding: 16px; }
+  aside h2 { font-size: 15px; margin: 0 0 4px; word-break: break-word; }
+  aside .path { color: var(--muted); font-size: 12px; word-break: break-all; }
+  aside .desc { margin: 10px 0; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+  .tag { font-size: 12px; padding: 1px 7px; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; }
+  .badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; color: #fff; vertical-align: middle; }
+  .problems { margin: 10px 0; padding: 8px 10px; border: 1px solid var(--misplaced); border-radius: 6px;
+    color: var(--misplaced); font-size: 12px; }
+  .problems div + div { margin-top: 4px; }
+  pre { white-space: pre-wrap; word-break: break-word; background: var(--soft); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .links a { color: var(--feedback); cursor: pointer; text-decoration: underline; margin-right: 8px; }
+  .empty { color: var(--muted); }
+  @media (max-width: 760px) {
+    .hint { display: none; }
+    main { flex-direction: column; }
+    #stage { min-height: 60vh; }
+    aside { width: auto; border-left: 0; border-top: 1px solid var(--line); }
+    .controls { margin-left: 0; justify-content: flex-start; width: 100%; }
+    input[type=search] { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Memory map · __PROJECT__</h1>
+  <span class="meta">__META__</span>
+  <div class="controls">
+    <div class="legend" id="legend"></div>
+    <input type="search" id="q" placeholder="Search name, description, tag" aria-label="Search memories">
+  </div>
+</header>
+<main>
+  <div id="stage">
+    <svg id="map" aria-label="Memory mind map"></svg>
+    <noscript><p class="empty">This map needs JavaScript. Open the file in a web browser.</p></noscript>
+    <div class="hint">Drag to pan · scroll to zoom · click a memory for details</div>
+    <div class="zoom"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zfit" title="Fit">⤢</button></div>
+  </div>
+  <aside id="panel"><p class="empty">Select a memory to see its details.</p></aside>
+</main>
+<script>
+const DATA = __DATA__;
+if (!DATA.nodes.length) document.getElementById("panel").innerHTML =
+  '<p class="empty">No memories yet. Agents add them with the memory-manage skill.</p>';
+const NS = "http://www.w3.org/2000/svg";
+const color = t => getComputedStyle(document.documentElement).getPropertyValue("--" + t).trim() || "#888";
+const svg = document.getElementById("map");
+const panel = document.getElementById("panel");
+const hidden = new Set();
+let selected = null;
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+}
+
+// Radial layout: each type gets an angular sector sized by its memory count.
+const groups = DATA.types.map(t => ({type: t, items: DATA.nodes.filter(n => n.type === t).sort((a, b) => a.id.localeCompare(b.id))}));
+const total = groups.reduce((s, g) => s + Math.max(1, g.items.length), 0);
+const leafCount = DATA.nodes.length;
+const R1 = 150;
+const R2 = Math.max(320, (leafCount * 30) / (2 * Math.PI));
+const pos = new Map();
+let angle = -Math.PI / 2;
+for (const g of groups) {
+  const span = (2 * Math.PI * Math.max(1, g.items.length)) / total;
+  g.angle = angle + span / 2;
+  g.x = R1 * Math.cos(g.angle);
+  g.y = R1 * Math.sin(g.angle);
+  g.items.forEach((n, i) => {
+    const a = angle + (span * (i + 0.5)) / g.items.length;
+    pos.set(n.id + "@" + n.path, {x: R2 * Math.cos(a), y: R2 * Math.sin(a), a, n});
+  });
+  angle += span;
+}
+const byName = new Map(DATA.nodes.map(n => [n.id, n]));
+const key = n => n.id + "@" + n.path;
+
+const view = el("g", {}, svg);
+const edges = el("g", {}, view), links = el("g", {}, view), nodesLayer = el("g", {}, view);
+const refs = [];  // {el, nodes: [memory...], group}
+
+for (const g of groups) {
+  const e = el("line", {class: "edge", x1: 0, y1: 0, x2: g.x, y2: g.y, "stroke-width": 2}, edges);
+  refs.push({el: e, group: g.type});
+  for (const n of g.items) {
+    const p = pos.get(key(n));
+    const mid = (R1 + R2) / 2;
+    const c1 = [mid * Math.cos(g.angle), mid * Math.sin(g.angle)], c2 = [mid * Math.cos(p.a), mid * Math.sin(p.a)];
+    const path = el("path", {class: "edge", d: `M${g.x},${g.y} C${c1} ${c2} ${p.x},${p.y}`}, edges);
+    refs.push({el: path, nodes: [n], group: g.type});
+  }
+}
+for (const n of DATA.nodes) {
+  for (const target of n.links) {
+    const t = byName.get(target);
+    if (!t || t === n) continue;
+    const a = pos.get(key(n)), b = pos.get(key(t));
+    const path = el("path", {class: "link", stroke: color(n.type),
+      d: `M${a.x},${a.y} Q${(a.x + b.x) * 0.3},${(a.y + b.y) * 0.3} ${b.x},${b.y}`}, links);
+    refs.push({el: path, nodes: [n, t], link: true});
+  }
+}
+
+const root = el("g", {class: "node root", transform: "translate(0,0)"}, nodesLayer);
+el("circle", {r: 10, fill: color("root")}, root);
+el("text", {y: -16, "text-anchor": "middle"}, root).textContent = "memories";
+
+for (const g of groups) {
+  const node = el("g", {class: "node branch", transform: `translate(${g.x},${g.y})`}, nodesLayer);
+  el("circle", {r: 7, fill: color(g.type)}, node);
+  const local = DATA.local_types.includes(g.type) ? ", local" : "";
+  const t = el("text", {y: -12, "text-anchor": "middle"}, node);
+  t.textContent = `${g.type} (${g.items.length}${local})`;
+  refs.push({el: node, group: g.type});
+}
+
+for (const n of DATA.nodes) {
+  const p = pos.get(key(n));
+  const deg = (p.a * 180) / Math.PI;
+  const flip = Math.cos(p.a) < 0;
+  const node = el("g", {class: "node leaf" + (n.problems.some(x => x.includes("error")) ? " bad" : ""),
+    transform: `translate(${p.x},${p.y})`, tabindex: 0}, nodesLayer);
+  el("circle", {r: 5, fill: color(n.type)}, node);
+  const label = el("text", {transform: `rotate(${flip ? deg + 180 : deg})`, x: flip ? -10 : 10, dy: "0.35em",
+    "text-anchor": flip ? "end" : "start"}, node);
+  label.textContent = n.id;
+  el("title", {}, node).textContent = n.description;
+  node.addEventListener("click", ev => { ev.stopPropagation(); select(n); });
+  node.addEventListener("keydown", ev => { if (ev.key === "Enter") select(n); });
+  refs.push({el: node, nodes: [n], leaf: n});
+  n._el = node;
+}
+
+function select(n) {
+  if (!n) return;
+  if (selected) selected._el.classList.remove("selected");
+  history.replaceState(null, "", "#" + encodeURIComponent(n.id));
+  selected = n;
+  n._el.classList.add("selected");
+  const backlinks = DATA.nodes.filter(m => m.links.includes(n.id)).map(m => m.id);
+  const linkList = (title, ids) => ids.length
+    ? `<p class="links"><strong>${title}:</strong> ${ids.map(i => `<a data-id="${esc(i)}">${esc(i)}</a>`).join("")}</p>` : "";
+  panel.innerHTML = `
+    <h2>${esc(n.id)} <span class="badge" style="background:${color(n.type)}">${esc(n.type)}${n.local ? " · local" : ""}</span></h2>
+    <div class="path">${esc(n.path)}</div>
+    <p class="desc">${esc(n.description) || '<span class="empty">No description</span>'}</p>
+    <div class="tags">${n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+    ${n.problems.length ? `<div class="problems">${n.problems.map(p => `<div>${esc(p)}</div>`).join("")}</div>` : ""}
+    ${linkList("Links to", n.links)}${linkList("Linked from", backlinks)}
+    <pre>${esc(n.body)}</pre>`;
+  panel.querySelectorAll("a[data-id]").forEach(a => a.addEventListener("click", () => select(byName.get(a.dataset.id))));
+}
+
+// Filtering: search text and legend toggles dim everything that does not match.
+const q = document.getElementById("q");
+function visible(n) {
+  if (hidden.has(n.type)) return false;
+  const s = q.value.trim().toLowerCase();
+  return !s || [n.id, n.description, ...n.tags].some(v => v.toLowerCase().includes(s));
+}
+function applyFilter() {
+  for (const r of refs) {
+    let show = true;
+    if (r.nodes) show = r.nodes.every(visible);
+    else if (r.group) show = !hidden.has(r.group);
+    r.el.classList.toggle("dim", !show);
+  }
+}
+q.addEventListener("input", applyFilter);
+
+const legend = document.getElementById("legend");
+for (const g of groups) {
+  const b = document.createElement("button");
+  b.innerHTML = `<span class="dot" style="background:${color(g.type)}"></span>${esc(g.type)} ${g.items.length}`;
+  b.title = "Show or hide " + g.type;
+  b.addEventListener("click", () => {
+    hidden.has(g.type) ? hidden.delete(g.type) : hidden.add(g.type);
+    b.classList.toggle("off", hidden.has(g.type));
+    applyFilter();
+  });
+  legend.appendChild(b);
+}
+
+// Pan and zoom through the viewBox.
+const longest = Math.max(8, ...DATA.nodes.map(n => n.id.length));
+const extent = R2 + 20 + longest * 7;
+let vb;
+function fit() {
+  const box = svg.getBoundingClientRect();
+  const ratio = box.width / Math.max(1, box.height);
+  const h = ratio >= 1 ? 2 * extent : (2 * extent) / ratio;
+  const w = h * ratio;
+  vb = {x: -w / 2, y: -h / 2, w, h};
+  draw();
+}
+function draw() { svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`); }
+function zoom(f, cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2) {
+  vb = {x: cx - (cx - vb.x) * f, y: cy - (cy - vb.y) * f, w: vb.w * f, h: vb.h * f};
+  draw();
+}
+svg.addEventListener("wheel", ev => {
+  ev.preventDefault();
+  const r = svg.getBoundingClientRect();
+  zoom(ev.deltaY > 0 ? 1.1 : 1 / 1.1, vb.x + ((ev.clientX - r.left) / r.width) * vb.w, vb.y + ((ev.clientY - r.top) / r.height) * vb.h);
+}, {passive: false});
+let drag = null;
+// Capture the pointer only once it moves, so a plain click still reaches a node.
+svg.addEventListener("pointerdown", ev => { drag = {x: ev.clientX, y: ev.clientY, moved: false}; });
+svg.addEventListener("pointermove", ev => {
+  if (!drag) return;
+  if (!drag.moved) {
+    if (Math.abs(ev.clientX - drag.x) + Math.abs(ev.clientY - drag.y) <= 3) return;
+    drag.moved = true;
+    svg.classList.add("dragging");
+    svg.setPointerCapture(ev.pointerId);
+  }
+  const r = svg.getBoundingClientRect();
+  vb.x -= ((ev.clientX - drag.x) / r.width) * vb.w;
+  vb.y -= ((ev.clientY - drag.y) / r.height) * vb.h;
+  drag.x = ev.clientX; drag.y = ev.clientY;
+  draw();
+});
+svg.addEventListener("pointerup", () => { drag = null; svg.classList.remove("dragging"); });
+document.getElementById("zin").onclick = () => zoom(1 / 1.25);
+document.getElementById("zout").onclick = () => zoom(1.25);
+document.getElementById("zfit").onclick = fit;
+window.addEventListener("resize", fit);
+fit();
+if (location.hash) select(byName.get(decodeURIComponent(location.hash.slice(1))));
+</script>
+</body>
+</html>
+"""
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
