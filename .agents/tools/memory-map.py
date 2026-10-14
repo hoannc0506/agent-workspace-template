@@ -146,7 +146,8 @@ TEMPLATE = r"""<!doctype html>
     border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
   aside { width: 360px; border-left: 1px solid var(--line); overflow: auto; padding: 16px; }
   aside h2 { font-size: 15px; margin: 0 0 4px; word-break: break-word; }
-  aside .path { color: var(--muted); font-size: 12px; word-break: break-all; }
+  aside .path { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  aside .path span { white-space: nowrap; }
   aside .desc { margin: 10px 0; }
   .tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
   .tag { font-size: 12px; padding: 1px 7px; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; }
@@ -296,7 +297,7 @@ function select(n) {
     ? `<p class="links"><strong>${title}:</strong> ${ids.map(i => `<a data-id="${esc(i)}">${esc(i)}</a>`).join("")}</p>` : "";
   panel.innerHTML = `
     <h2>${esc(n.id)} <span class="badge" style="background:${color(n.type)}">${esc(n.type)}${n.local ? " · local" : ""}</span></h2>
-    <div class="path">${esc(n.path)}${n.updated ? ` · updated ${esc(n.updated)}` : ""}</div>
+    <div class="path">${esc(n.path)}${n.updated ? ` <span>· updated ${esc(n.updated)}</span>` : ""}</div>
     <p class="desc">${esc(n.description) || '<span class="empty">No description</span>'}</p>
     <div class="tags">${n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
     ${n.problems.length ? `<div class="problems">${n.problems.map(p => `<div>${esc(p)}</div>`).join("")}</div>` : ""}
