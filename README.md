@@ -1,75 +1,118 @@
 # Agent workspace template
 
-A repository template that gives Claude Code and Codex one set of instructions, a shared file-based project memory, shared skills and hooks, and a home for reports.
-Agent rules live in [AGENTS.md](AGENTS.md) and memory rules in [.agents/MEMORY.md](.agents/MEMORY.md); this README covers how to use the template.
+A repository template for working with coding agents such as Claude Code and Codex.
+It keeps agent instructions, project memory, reusable skills and hook scripts together in the repository.
+Shared memories are versioned with the project so teammates and agents can reuse context across sessions.
 
-## What you get
+Start with [Using this template](#using-this-template) below.
+Agent instructions live in [AGENTS.md](AGENTS.md); memory rules live in [.agents/MEMORY.md](.agents/MEMORY.md).
 
-| Path | Purpose |
-|---|---|
-| `AGENTS.md` | Agent instructions, read by Codex directly and by Claude Code through `CLAUDE.md` |
-| `.agents/MEMORY.md` | Memory rules plus a generated index of shared memories, read at session start |
-| `.agents/memories/<type>/` | Project memory, one fact per file (`user` is local; `feedback`, `project`, `reference` are shared) |
-| `.agents/skills/` | Shared skills: `memory-manage`, and `how` (adapted from [poteto/how](https://github.com/poteto/how), MIT) |
-| `.agents/hooks/` | `redact-secrets.py` masks secrets; `memory-guard.py` lints memories and reports as they are written |
-| `.agents/tools/` | `memory-lint.py`, `memory-index.py` and `memory-map.py` |
-| `docs/` | Committed team documentation |
-| `reports/<category>/` | Local, gitignored reports |
-| `.claude/`, `.codex/` | Per-agent settings and hook registration |
-| `.claude/agents/`, `.codex/agents/` | Subagents: `code-reviewer`, `security-auditor`, `test-engineer` and `web-performance-auditor` for both (from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), MIT), and the Claude-only `builder` |
+## Using this template
 
-CI runs `memory-lint` on every push and PR.
-Example memories live on the `demo` branch.
-Requires Git and Python 3.10+ (standard library only).
+### 1. Create your project
 
-## Start a new project
+Pick one way.
 
-1. Clone the template and keep it as `upstream`:
-
-   ```sh
-   git clone https://github.com/hoannc0506/agent-workspace.git my-project
-   cd my-project
-   git remote rename origin upstream
-   ```
-
-2. Push to your own empty repository:
-
-   ```sh
-   git remote add origin <your-project-repo-url>
-   git push -u origin main
-   ```
-
-3. Add project instructions to `AGENTS.md` in a new section.
-4. Open the project in Claude Code (`claude`, then approve the project hooks) or Codex (trust the project, then review hooks with `/hooks`).
-
-Personal settings go in `.claude/settings.local.json` (gitignored) or `~/.codex/config.toml`.
-
-## Daily use
-
-- Ask an agent to "remember" something; it saves a memory with the `memory-manage` skill.
-- Ask for plans, research or reviews; agents write them to `reports/<category>/`, and anything worth keeping moves to `docs/`.
-- Run parallel work in worktrees under `.worktrees/<type>/<slug>`.
-- Before pushing, run `.agents/tools/memory-lint.py`; view memories as a mind map with `.agents/tools/memory-map.py --open`.
-
-## Related: agent-skills
-
-[addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) is a set of engineering skills, slash commands and subagents for coding agents, from spec and plan to build, review and ship.
-This template does not need it: its subagents are copied into `.claude/agents/` and `.codex/agents/`, and the Claude-only `builder` subagent is a self-contained adaptation of its `/build` workflow.
-Install it for the full skill set:
+**From GitHub (recommended).**
+Click **Use this template** > **Create a new repository** on the [template page](https://github.com/hoannc0506/agent-workspace-template), or use the GitHub CLI:
 
 ```sh
-# Claude Code
-/plugin marketplace add addyosmani/agent-skills
-/plugin install agent-skills@addy-agent-skills
-
-# Codex and other agents, through the skills CLI
-npx skills add addyosmani/agent-skills
+gh repo create my-project --template hoannc0506/agent-workspace-template --private --clone
+cd my-project
+git remote add upstream https://github.com/hoannc0506/agent-workspace-template.git
 ```
+
+Your repository starts with a single clean commit.
+The `upstream` remote lets you pull template updates later.
+
+**By cloning.**
+Use this to keep the template's history, or when your project is not on GitHub:
+
+```sh
+git clone https://github.com/hoannc0506/agent-workspace-template.git my-project
+cd my-project
+git remote rename origin upstream
+git remote add origin <your-project-repo-url>
+git push -u origin main
+```
+
+### 2. Add your project instructions
+
+1. Add a project section to `AGENTS.md` with what agents should know: the stack, how to build, test and run, and any conventions.
+2. Replace this README with your project's own, or keep it as a guide for the agent setup.
+
+## Project structure
+
+```
+.
+├── AGENTS.md            agent instructions (CLAUDE.md imports it for Claude Code)
+├── .agents/             shared by both agents
+│   ├── memories/        project memory; rules and index in .agents/MEMORY.md
+│   ├── skills/          shared skills
+│   ├── hooks/           hooks for both agents
+│   └── tools/           memory lint, index and mind-map tools
+├── .claude/             Claude Code settings
+├── .codex/              Codex settings
+├── .github/workflows/   CI for memory-lint, off by default
+├── assets/              images used in this README
+├── docs/                committed team documentation
+├── reports/             local reports, gitignored
+└── .worktrees/          local git worktrees, gitignored
+```
+
+## Project memory
+
+Project memory records useful context that code alone cannot explain, such as decisions, working preferences and links to runbooks.
+Shared memories are committed Markdown files that teammates and agents can read in later sessions.
+
+Agents keep project knowledge as Markdown files in `.agents/memories/<type>/`, one fact per file.
+`feedback`, `project` and `reference` memories are committed and shared with the team; `user` memories stay on your machine.
+`.agents/MEMORY.md` holds the rules and a generated index that every agent reads at session start.
+
+The template supports four memory types: `feedback`, `project`, `reference` and `user`.
+Adding another type requires updating the memory rules and tooling.
+
+From the repository root, run:
+
+```sh
+python3 .agents/tools/memory-map.py --open
+```
+
+This generates an HTML mind map and opens it in your browser.
+The map groups memories by type; dashed lines are `[[name]]` links between memories.
+Click a memory to see its header, body and any lint errors.
+This screenshot uses the example memories from the `demo` branch.
+
+![Memory mind map with a memory selected](assets/memory-map-detail.png)
+
+## Skills and hooks
+
+Skills live in `.agents/skills/` and are shared by both agents:
+
+| Skill | Use it to |
+|---|---|
+| `memory-manage` | Save, update, delete or review project memories |
+
+Hooks live in `.agents/hooks/` and are registered for both agents:
+
+| Hook | Runs | Does |
+|---|---|---|
+| `redact-secrets.py` | On every prompt and after tool calls | Blocks prompts containing recognized secret patterns. For matched tool output, masks detected secrets in Claude Code and adds a warning in Codex. |
+| `memory-guard.py` | After an agent writes a file | Lints memories, the index and reports, so the agent fixes errors in the same turn |
 
 ## Update from the template
 
-```sh
-git fetch upstream && git merge upstream/main
+Ask your agent to pull in the latest template, for example:
+
+```text
+Adopt the latest updates from the agent workspace template:
+fetch the `upstream` remote (add https://github.com/hoannc0506/agent-workspace-template.git if it is missing),
+merge upstream/main on a new branch (use --allow-unrelated-histories if the histories are unrelated),
+preserve project-specific instructions, settings and memories,
+review changes to shared tooling and configuration individually, and flag conflicts for review,
+then summarize what changed and run python3 .agents/tools/memory-lint.py.
 ```
 
-On conflicts, keep your project content and take the template version of template-owned files (listed in `AGENTS.md`).
+Template updates may affect `.agents/` (including its memory rules and tools), `.claude/`, `.codex/`, `.github/workflows/agents-lint.yml` and `AGENTS.md`.
+Preserve files under `.agents/memories/` and any project-specific additions to instructions or settings when reviewing these changes.
+Review the agent's summary and the diff before merging the branch.
