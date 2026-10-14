@@ -34,6 +34,8 @@ NEEDS_WHY = ("feedback", "project")
 LOCAL_TYPES = ("user",)
 REPORT_EXTS = (".html", ".md", ".svg", ".png")
 TEXT_EXTS = (".html", ".md", ".svg")
+# Placeholders and OS metadata files (Finder, Explorer) that are never memories or reports.
+IGNORED_FILES = (".gitkeep", ".DS_Store", "Thumbs.db")
 
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -130,14 +132,14 @@ def parse_header(text):
 def memory_files():
     if not MEMORIES.is_dir():
         return []
-    return sorted(p for p in MEMORIES.rglob("*") if p.is_file() and p.name != ".gitkeep")
+    return sorted(p for p in MEMORIES.rglob("*") if p.is_file() and p.name not in IGNORED_FILES)
 
 
 def report_files():
     if not REPORTS.is_dir():
         return []
     return sorted(p for p in REPORTS.rglob("*")
-                  if p.is_file() and p.name != ".gitkeep" and LOCAL_REPORTS not in p.parents)
+                  if p.is_file() and p.name not in IGNORED_FILES and LOCAL_REPORTS not in p.parents)
 
 
 def load_memories():
@@ -356,14 +358,14 @@ def lint(paths=None):
         targets_rep = [p for p in wanted
                        if p.is_file() and REPORTS in p.parents and LOCAL_REPORTS not in p.parents]
         for p in wanted:
-            if p.is_file() and MEMORIES in p.parents and p.suffix != ".md" and p.name != ".gitkeep":
+            if p.is_file() and MEMORIES in p.parents and p.suffix != ".md" and p.name not in IGNORED_FILES:
                 out.error(p.relative_to(ROOT).as_posix(), 1, "memories must be .md files")
         with_index = INDEX in wanted or any(MEMORIES in p.parents for p in wanted)
 
     for mem in targets_mem:
         check_memory(mem, names, all_names, out)
     for path in sorted(targets_rep):
-        if path.name != ".gitkeep":
+        if path.name not in IGNORED_FILES:
             check_report(path, out)
     if with_index:
         check_index(memories, out)
