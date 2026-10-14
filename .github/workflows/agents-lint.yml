@@ -1,8 +1,11 @@
 name: agents-lint
 
+# Off by default: runs only when started by hand from the Actions tab.
+# To lint on every push and PR, uncomment push and pull_request.
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
+  # push:
+  # pull_request:
 
 jobs:
   memory-lint:
