@@ -64,7 +64,7 @@ Do not save anything derivable from the code, git history, `AGENTS.md` or an exi
 - Update an existing memory instead of creating a near-duplicate, and delete memories that turn out to be wrong.
 - After every change, run `.agents/tools/memory-index.py` to regenerate the index below, and commit it with the memory change.
 - A hook lints memory, index and report files after every write; fix any error it reports immediately.
-- Run `.agents/tools/memory-lint.py` before pushing; CI runs it on every push and PR.
+- Run `.agents/tools/memory-lint.py` before pushing; CI runs it only if `.github/workflows/agents-lint.yml` is turned on.
 - `.agents/tools/memory-map.py --open` renders all memories as a mind map in `reports/local/memory-map.html`.
 
 ## Index
