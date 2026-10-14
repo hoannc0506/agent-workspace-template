@@ -29,7 +29,6 @@ reports/<category>/       local reports, gitignored
 ```
 
 - Put anything both agents use in `.agents/`; add skills only in `.agents/skills/`.
-- Subagents are defined in `.claude/agents/` (Claude Code) and `.codex/agents/` (Codex): `code-reviewer`, `security-auditor`, `test-engineer`, `web-performance-auditor`, and the Claude-only `builder`.
 - Register every hook in both `.claude/settings.json` and `.codex/config.toml`.
 Hooks are standard-library Python and fail open (exit 0 on internal errors).
 
@@ -42,7 +41,7 @@ Also read every file in `.agents/memories/user/` (local, not indexed).
 
 ## Reports and docs
 
-- Write reports to `reports/<category>/YYYY-MM-DD-<slug>.<ext>` (`plans`, `research`, `reviews`, `incidents`, `architecture`); they are gitignored.
+- Write reports to `reports/<category>/YYYY-MM-DD-<slug>.<ext>` (`plans`, `research`, `architecture`); they are gitignored.
 - Prefer one self-contained `.html` file: plain light theme, system fonts, minimal CSS, no dark mode or heavy effects.
 - Add simple diagrams where they help: inline SVG or HTML boxes, thin lines, no gradients or shadows; C4 model, one level per diagram, for architecture.
 - Move anything the team or future sessions need into `docs/` (committed, `.md` by default) and never reference a report from a shared memory.
